@@ -1,53 +1,52 @@
 <!DOCTYPE html>
 <html lang="uz">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>EV Parts Store</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet"/>
+    <style>
+        /* Sizning CSS kodlaringiz shu yerda turadi... */
+        /* ... (CSS kodingizni to'liq joylashtiring) ... */
+    </style>
 </head>
-<body class="bg-[#0f172a] text-white p-5">
+<body>
 
-    <div class="max-w-4xl mx-auto">
-        <header class="flex justify-between items-center mb-8 border-b border-gray-700 pb-4">
-            <h1 class="text-2xl font-bold text-blue-400">⚡ EV PARTS</h1>
-            <button class="bg-blue-600 px-4 py-2 rounded-lg hover:bg-blue-500 transition">Savat</button>
-        </header>
+<script>
+    const API_BASE_URL = 'https://ev-parts-store.onrender.com';
+    const tg = window.Telegram?.WebApp;
+    if(tg){tg.ready();tg.expand();}
 
-        <h2 class="text-xl mb-6">Elektromobillar uchun ehtiyot qismlar</h2>
-        
-        <div id="products" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <p class="text-gray-400">Yuklanmoqda...</p>
-        </div>
-    </div>
-
-    <script>
-        const API_BASE_URL = 'https://ev-parts-store.onrender.com';
-
-        async function fetchProducts() {
-            try {
-                const response = await fetch(`${API_BASE_URL}/products`);
-                const data = await response.json();
-                
-                const container = document.getElementById('products');
-                container.innerHTML = '';
-                
-                data.forEach(item => {
-                    container.innerHTML += `
-                        <div class="bg-[#1e293b] p-5 rounded-xl border border-gray-700 hover:border-blue-500 transition">
-                            <h3 class="text-lg font-semibold">${item.name}</h3>
-                            <p class="text-blue-400 font-bold mt-2">${item.price} so'm</p>
-                            <button class="mt-4 w-full bg-blue-600 py-2 rounded-lg hover:bg-blue-700">Qo'shish +</button>
-                        </div>
-                    `;
-                });
-            } catch (error) {
-                document.getElementById('products').innerHTML = 
-                    `<p class="text-red-400">Xatolik: Server javob bermadi. Iltimos, keyinroq urinib ko'ring.</p>`;
-            }
+    // 1. Serverdan mahsulotlarni tortib olish
+    async function loadProducts() {
+        try {
+            const response = await fetch(`${API_BASE_URL}/products`);
+            const serverData = await response.json();
+            // serverData - bu bazadagi mahsulotlar ro'yxati
+            renderProducts(serverData); 
+        } catch (error) {
+            console.error("Ma'lumot yuklashda xatolik:", error);
+            // Agar server bo'lmasa, test uchun eski ro'yxatni ishlatamiz
+            renderProducts(products); 
         }
+    }
 
-        fetchProducts();
-    </script>
+    // 2. Mahsulotlarni ekranga chiqarish (Sizning kodingizdagi renderProducts)
+    function renderProducts(list) {
+        const grid = document.getElementById('productsGrid');
+        grid.innerHTML = list.map(p => `
+            <div class="product-card" onclick="openDetail(${p.id})">
+                </div>
+        `).join('');
+    }
+
+    // init() funksiyasini yuklashda loadProducts ni chaqiring
+    async function init() {
+        await loadProducts();
+        // ... boshqa brand/cat renderlari
+    }
+    init();
+</script>
 </body>
 </html>
