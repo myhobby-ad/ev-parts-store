@@ -19,15 +19,17 @@
     if(tg){tg.ready();tg.expand();}
 
     // 1. Serverdan mahsulotlarni tortib olish
+  // 1. Serverdan mahsulotlarni tortib olish
     async function loadProducts() {
         try {
             const response = await fetch(`${API_BASE_URL}/products`);
             const serverData = await response.json();
-            // serverData - bu bazadagi mahsulotlar ro'yxati
+            
+            // Xatolik shu yerda edi: 'data' o'rniga 'serverData' bo'lishi kerak
             renderProducts(serverData); 
         } catch (error) {
             console.error("Ma'lumot yuklashda xatolik:", error);
-            // Agar server bo'lmasa, test uchun eski ro'yxatni ishlatamiz
+            // Agar server javob bermasa, oldindan belgilangan 'products' ro'yxatini ishlatamiz
             renderProducts(products); 
         }
     }
