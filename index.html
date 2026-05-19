@@ -4,17 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EV Parts Store</title>
-    <style>
-        body { font-family: sans-serif; background: #121212; color: white; padding: 20px; }
-        .product-card { background: #1e1e1e; padding: 15px; margin: 10px 0; border-radius: 8px; }
-    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <h1>Elektromobillar uchun ehtiyot qismlar</h1>
-    <div id="products">Yuklanmoqda...</div>
+<body class="bg-[#0f172a] text-white p-5">
+
+    <div class="max-w-4xl mx-auto">
+        <header class="flex justify-between items-center mb-8 border-b border-gray-700 pb-4">
+            <h1 class="text-2xl font-bold text-blue-400">⚡ EV PARTS</h1>
+            <button class="bg-blue-600 px-4 py-2 rounded-lg hover:bg-blue-500 transition">Savat</button>
+        </header>
+
+        <h2 class="text-xl mb-6">Elektromobillar uchun ehtiyot qismlar</h2>
+        
+        <div id="products" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <p class="text-gray-400">Yuklanmoqda...</p>
+        </div>
+    </div>
 
     <script>
-        // Render'dan olgan havolangizni shu yerga yozing
         const API_BASE_URL = 'https://ev-parts-store.onrender.com';
 
         async function fetchProducts() {
@@ -27,14 +34,16 @@
                 
                 data.forEach(item => {
                     container.innerHTML += `
-                        <div class="product-card">
-                            <h3>${item.name}</h3>
-                            <p>Narxi: ${item.price} so'm</p>
+                        <div class="bg-[#1e293b] p-5 rounded-xl border border-gray-700 hover:border-blue-500 transition">
+                            <h3 class="text-lg font-semibold">${item.name}</h3>
+                            <p class="text-blue-400 font-bold mt-2">${item.price} so'm</p>
+                            <button class="mt-4 w-full bg-blue-600 py-2 rounded-lg hover:bg-blue-700">Qo'shish +</button>
                         </div>
                     `;
                 });
             } catch (error) {
-                document.getElementById('products').innerText = "Ma'lumotlarni yuklashda xatolik yuz berdi.";
+                document.getElementById('products').innerHTML = 
+                    `<p class="text-red-400">Xatolik: Server javob bermadi. Iltimos, keyinroq urinib ko'ring.</p>`;
             }
         }
 
