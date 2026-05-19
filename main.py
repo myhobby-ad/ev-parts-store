@@ -193,3 +193,6 @@ async def create_order(order: OrderModel):
     print(f"🛒 Yangi Buyurtma! Mijoz: {order.user_name}, Jami: {order.total_price} so'm")
     return {"status": "success", "message": "Buyurtma qabul qilindi!"}
 
+@app.get("/products")
+async def get_products():
+    return [{"name": "Batareya", "price": 500000}, {"name": "Zaryadlovchi", "price": 200000}]

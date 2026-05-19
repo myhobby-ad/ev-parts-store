@@ -1,126 +1,44 @@
-git pull origin main --rebase<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EV Parts Store</title>
     <style>
-        /* CSS stillaringiz */
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 10px;
-            background-color: #f4f4f4;
-        }
-        .product-title {
-            height: 34px;
-            overflow: hidden;
-            display: -webkit-box;
-            -webkit-line-clamp: 2; /* Brauzer mosligi uchun */
-            line-clamp: 2;         /* Standard xususiyat */
-            -webkit-box-orient: vertical;
-        }
-        .btn {
-            border: none;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            color: #ffffff;
-            background-color: #007bff;
-            padding: 10px;
-            border-radius: 5px;
-        }
+        body { font-family: sans-serif; background: #121212; color: white; padding: 20px; }
+        .product-card { background: #1e1e1e; padding: 15px; margin: 10px 0; border-radius: 8px; }
     </style>
 </head>
 <body>
-
-    <div id="app">
-        <h1>Elektromobillar uchun ehtiyot qismlar</h1>
-        <div id="brands-container"></div>
-        <div id="products-container"></div>
-    </div>
+    <h1>Elektromobillar uchun ehtiyot qismlar</h1>
+    <div id="products">Yuklanmoqda...</div>
 
     <script>
-        // Backend API manzili (FastAPI serveringiz porti)
-        const API_BASE_URL = 'http://127.0.0.1:8000';
-        
-        let brands = [];
-        let products = [];
+        // Render'dan olgan havolangizni shu yerga yozing
+        const API_BASE_URL = 'https://ev-parts-store.onrender.com';
 
-        // 1. SAHIFANI BACKEND BILAN JONLANTIRISH (INIT)
-        async function init() {
+        async function fetchProducts() {
             try {
-                // Brendlarni backenddan olish
-                const brandRes = await fetch(`${API_BASE_URL}/api/brands`);
-                const brandData = await brandRes.json();
-                brands = brandData.brands || ["Barchasi"];
+                const response = await fetch(`${API_BASE_URL}/products`);
+                const data = await response.json();
                 
-                // Sahifaga yuklash
-                await loadProducts();
-            } catch (error) {
-                console.error("Xatolik yuz berdi:", error);
-            }
-        }
-
-        // 2. MAHSULOTLARNI BACKENDDAN YUKLASH
-        async function loadProducts() {
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/products`);
-                products = await response.json();
+                const container = document.getElementById('products');
+                container.innerHTML = '';
                 
-                // Mahsulotlarni ekranga chizish funksiyasini chaqirish
-                renderProducts(products);
+                data.forEach(item => {
+                    container.innerHTML += `
+                        <div class="product-card">
+                            <h3>${item.name}</h3>
+                            <p>Narxi: ${item.price} so'm</p>
+                        </div>
+                    `;
+                });
             } catch (error) {
-                console.error("Mahsulotlarni yuklashda xatolik:", error);
+                document.getElementById('products').innerText = "Ma'lumotlarni yuklashda xatolik yuz berdi.";
             }
         }
 
-        // 3. MAHSULOTLARNI FILTRLASH
-        async function filterProducts(category) {
-            try {
-                let url = `${API_BASE_URL}/api/products`;
-                if (category && category !== "Barchasi") {
-                    url += `?category=${category}`;
-                }
-                
-                const response = await fetch(url);
-                const filtered = await response.json();
-                renderProducts(filtered);
-            } catch (error) {
-                console.error("Filtrlashda xatolik:", error);
-            }
-        }
-
-        // Ekranga mahsulotlarni chiqarish yordamchi funksiyasi
-        function renderProducts(productsList) {
-            const container = document.getElementById('products-container');
-            container.innerHTML = ''; // Tozalash
-
-            if (productsList.length === 0) {
-                container.innerHTML = '<p>Mahsulotlar topilmadi.</p>';
-                return;
-            }
-
-            productsList.forEach(product => {
-                const html = `
-                    <div class="product-card">
-                        <img src="${product.image_url}" alt="${product.name}" style="width:100px;">
-                        <div class="product-title">${product.name}</div>
-                        <p>Brend: ${product.brand}</p>
-                        <p>Narxi: ${product.price} so'm</p>
-                    </div>
-                `;
-                container.insertAdjacentHTML('beforeend', html);
-            });
-        }
-
-        // Sahifa yuklanganda ishga tushirish
-        window.onload = () => {
-            init();
-        };
+        fetchProducts();
     </script>
 </body>
 </html>
->>>>>>> 3878114 (Boshlang'ich loyiha)
