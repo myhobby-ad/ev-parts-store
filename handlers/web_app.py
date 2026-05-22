@@ -2,38 +2,36 @@ import json
 from aiogram import Router, F
 from aiogram.types import Message
 from loader import bot
-import config  # config ni to'liq import qilamiz
+from config import ADMIN_ID
 
 web_app_router = Router()
 
 @web_app_router.message(F.web_app_data)
 async def handle_web_app_data(message: Message):
-    raw_data = message.web_app_data.data
-    
-    # DEBUG: ADMIN_ID ni terminalda tekshiramiz
-    print(f"DEBUG: Hozirgi ADMIN_ID = {config.ADMIN_ID}")
+    # Terminalda ishlashini tekshirish uchun
+    print("✅ Web App dan ma'lumot keldi!")
     
     try:
-        data = json.loads(raw_data)
+        data = json.loads(message.web_app_data.data)
         items = data.get("items", [])
-        total_price = data.get("total", 0)
+        total = data.get("total", 0)
+
+        # Admin uchun xabar shakllantirish
+        admin_text = (
+            f"🔔 **YANGI BUYURTMA!**\n\n"
+            f"👤 Mijoz: {message.from_user.full_name}\n"
+            f"📦 Mahsulotlar:\n"
+        )
+        for i, item in enumerate(items, 1):
+            admin_text += f"{i}. {item['name']} - {item['qty']} ta - {item['price']:,} so'm\n"
+        admin_text += f"\n💰 **Jami: {total:,} so'm**"
+
+        # Adminga xabar yuborish
+        await bot.send_message(chat_id=ADMIN_ID, text=admin_text, parse_mode="Markdown")
         
-        # ... (sizning yozgan user_text va admin_text kodlaringizni shu yerga qo'ying) ...
-        # (matn yig'ish qismi o'zgarishsiz qolaveradi)
+        # Mijozga tasdiq xabari
+        await message.answer("✅ Buyurtmangiz qabul qilindi!")
         
-        admin_text = "🔔 YANGI BUYURTMA!\n" + ... # (matnni saqlang)
-        
-        # Xabarlarni yuborish
-        await message.answer("✅ Buyurtmangiz qabul qilindi!", parse_mode="Markdown")
-        
-        # ADMINGA yuborish (SHU YERNI TEKSHIRAMIZ)
-        if config.ADMIN_ID:
-            await bot.send_message(chat_id=config.ADMIN_ID, text=admin_text, parse_mode="Markdown")
-            print("DEBUG: Buyurtma adminga yuborildi.")
-        else:
-            print("DEBUG: Xatolik! ADMIN_ID topilmadi.")
-            
     except Exception as e:
-        print(f"DEBUG: Xatolik yuz berdi: {e}")
-        await message.answer(f"❌ Xatolik: {e}")
-        
+        print(f"❌ Xatolik: {e}")
+        await message.answer("❌ Buyurtmani qabul qilishda xatolik yuz berdi.")
