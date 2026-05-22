@@ -2,7 +2,7 @@ import json
 from aiogram import Router, F
 from aiogram.types import Message
 from loader import bot
-from config import ADMIN_ID
+import config  # config ni to'liq import qilamiz
 
 web_app_router = Router()
 
@@ -10,45 +10,30 @@ web_app_router = Router()
 async def handle_web_app_data(message: Message):
     raw_data = message.web_app_data.data
     
+    # DEBUG: ADMIN_ID ni terminalda tekshiramiz
+    print(f"DEBUG: Hozirgi ADMIN_ID = {config.ADMIN_ID}")
+    
     try:
         data = json.loads(raw_data)
         items = data.get("items", [])
         total_price = data.get("total", 0)
         
-        # Xaridor uchun matn
-        user_text = "🎉 **Buyurtmangiz muvaffaqiyatli qabul qilindi!**\n\n"
-        user_text += "📦 **Xarid qilingan mahsulotlar:**\n"
+        # ... (sizning yozgan user_text va admin_text kodlaringizni shu yerga qo'ying) ...
+        # (matn yig'ish qismi o'zgarishsiz qolaveradi)
         
-        # Admin uchun matn
-        admin_text = "🔔 **YANGI BUYURTMA KELDI!**\n\n"
-        admin_text += f"👤 **Xaridor:** {message.from_user.full_name}\n"
-        if message.from_user.username:
-            admin_text += f"🔗 **Telegram:** @{message.from_user.username}\n"
-        admin_text += f"🆔 **User ID:** `{message.from_user.id}`\n\n"
-        admin_text += "📦 **Mahsulotlar ro'yxati:**\n"
-        
-        # Mahsulotlarni hisoblash tsikli
-        for index, item in enumerate(items, 1):
-            name = item.get("name", "Noma'lum")
-            qty = item.get("qty", 1)
-            price = item.get("price", 0)
-            item_total = price * qty
-            
-            line = f"{index}. {name} — {qty} dona x {price:,} so'm = {item_total:,} so'm\n"
-            user_text += line
-            admin_text += line
-            
-        user_text += f"\n💰 **Jami summa:** {total_price:,} so'm\n"
-        user_text += "⏳ Tez orada operatorlarimiz siz bilan bog'lanishadi."
-        
-        admin_text += f"\n💰 **Jami summa:** {total_price:,} so'm"
+        admin_text = "🔔 YANGI BUYURTMA!\n" + ... # (matnni saqlang)
         
         # Xabarlarni yuborish
-        await message.answer(user_text, parse_mode="Markdown")
-        await bot.send_message(chat_id=ADMIN_ID, text=admin_text, parse_mode="Markdown")
+        await message.answer("✅ Buyurtmangiz qabul qilindi!", parse_mode="Markdown")
         
-    except json.JSONDecodeError:
-        await message.answer("❌ Ma'lumotlarni qayta ishlashda xatolik yuz berdi (Noto'g'ri format).")
+        # ADMINGA yuborish (SHU YERNI TEKSHIRAMIZ)
+        if config.ADMIN_ID:
+            await bot.send_message(chat_id=config.ADMIN_ID, text=admin_text, parse_mode="Markdown")
+            print("DEBUG: Buyurtma adminga yuborildi.")
+        else:
+            print("DEBUG: Xatolik! ADMIN_ID topilmadi.")
+            
     except Exception as e:
-        await message.answer(f"❌ Kutilmagan xatolik: {e}")
+        print(f"DEBUG: Xatolik yuz berdi: {e}")
+        await message.answer(f"❌ Xatolik: {e}")
         
