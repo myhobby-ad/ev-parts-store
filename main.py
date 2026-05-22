@@ -1,60 +1,80 @@
 import asyncio
 import json
-import os
+import logging
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from aiogram import Bot, Dispatcher, types
-from aiogram.filters import Command
+from aiogram.types import Message
+import config  # Bu yerda config.py faylingizdagi token va ID saqlanadi
 
-# --- SOZLAMALAR ---
-# Tokenni o'zgartiring: yoki Render'dan oling, yoki shu yerga yozing
-BOT_TOKEN = os.getenv("BOT_TOKEN", "SIZNING_TOKENINGIZNI_SHU_YERGA_YOZING")
-ADMIN_ID = os.getenv("ADMIN_ID", "SIZNING_TELEGRAM_IDINGIZ")
+# Loglarni sozlash (Xatoliklarni terminalda ko'rish uchun)
+logging.basicConfig(level=logging.INFO)
 
-bot = Bot(token=BOT_TOKEN)
+# Bot va FastAPI sozlamalari
+bot = Bot(token=config.BOT_TOKEN)
 dp = Dispatcher()
 app = FastAPI()
 
-# --- CORS (Sayt va Server bog'lanishi) ---
+# CORS (Frontend va Backend bog'lanishi uchun shart!)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"], 
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# --- TELEGRAM BOT LOGIKASI ---
+# --- 1. TELEGRAM BOT QISMI ---
 @dp.message()
-async def handle_message(message: types.Message):
-    # Web App'dan ma'lumot kelganda
+async def handle_web_app_data(message: Message):
+    # Agar Web App dan ma'lumot kelsa
     if message.web_app_data:
         try:
+            # Saytdan kelgan JSON ni o'qiymiz
             data = json.loads(message.web_app_data.data)
             
-            # Buyurtmani chiroyli formatlash
-            order_text = f"📦 **Yangi buyurtma!**\n\n"
-            for item in data['items']:
-                order_text += f"🔹 {item['name']} | {item['qty']} ta | {item['price']} so'm\n"
-            order_text += f"\n💰 **Jami: {data['total']} so'm**"
+            # Buyurtmani chiroyli ko'rinishda shakllantiramiz
+            order_text = (
+                f"📦 **YANGI BUYURTMA!**\n\n"
+                f"👤 Mijoz: {message.from_user.full_name}\n"
+                f"🆔 ID: {message.from_user.id}\n\n"
+                f"Mahsulotlar:\n"
+            )
             
-            # Adminga yuborish
-            await bot.send_message(ADMIN_ID, order_text, parse_mode="Markdown")
-            # Mijozga javob
-            await message.answer("✅ Buyurtmangiz qabul qilindi!")
+            for item in data['items']:
+                order_text += f"- {item['name']} | {item['qty']} ta | {item['price']} so'm\n"
+            
+            order_text += f"\n💰 **JAMI: {data['total']} so'm**"
+            
+            # Adminga (sizga) xabar yuborish
+            await bot.send_message(config.ADMIN_ID, order_text, parse_mode="Markdown")
+            
+            # Mijozga javob yuborish
+            await message.answer("✅ Buyurtmangiz muvaffaqiyatli qabul qilindi! Tez orada bog'lanamiz.")
+            
         except Exception as e:
-            print(f"Xatolik: {e}")
+            logging.error(f"Buyurtmani qayta ishlashda xatolik: {e}")
 
-# --- API LOGIKASI ---
+# --- 2. FASTAPI (API) QISMI ---
 @app.get("/products")
 async def get_products():
+    # Bu yerda mahsulotlar bazasini qaytaring
     return [
         {"id": 1, "name": "Batareya", "price": 500000},
         {"id": 2, "name": "Zaryadlovchi", "price": 200000}
     ]
 
-# --- ISHGA TUSHIRISH ---
+@app.get("/")
+async def root():
+    return {"status": "Server ishlamoqda!"}
+
+# --- 3. ISHGA TUSHIRISH ---
 @app.on_event("startup")
 async def startup_event():
-    # Botni fon rejimida ishga tushirish
+    # Botni fon rejimida (background) ishga tushiramiz
     asyncio.create_task(dp.start_polling(bot))
-    print("Bot va Server ishga tushdi!")
+    logging.info("Bot va Server ishga tushdi!")
+
+# Render yoki localhost da ishga tushirish uchun
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
